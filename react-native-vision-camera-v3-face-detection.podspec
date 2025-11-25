@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.authors      = package["author"]
 
   s.platforms    = { :ios => min_ios_version_supported }
-  s.source       = { :git => "https://github.com/gev2002//react-native-vision-camera-v3-face-detection.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/alexandergx//react-native-vision-camera-v3-face-detection.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm}"
 
