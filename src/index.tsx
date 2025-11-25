@@ -9,7 +9,6 @@ import {
 } from 'react-native-vision-camera';
 import { Worklets } from 'react-native-worklets-core';
 import { scanFaces } from './scanFaces';
-import { scanText } from './scanText';
 import type { Frame, CameraTypes, FrameProcessor, ScanFacesResult } from './types';
 
 // local helper hook built on 0.2.x API
