@@ -9,6 +9,7 @@ import {
 } from 'react-native-vision-camera';
 import { Worklets } from 'react-native-worklets-core';
 import { scanFaces } from './scanFaces';
+import { scanText } from './scanText';
 import type { Frame, CameraTypes, FrameProcessor, ScanFacesResult } from './types';
 
 // local helper hook built on 0.2.x API
@@ -43,7 +44,7 @@ export const Camera = forwardRef(function Camera(
     (frame: Frame): void => {
       'worklet';
       const data: ScanFacesResult = scanFaces(frame, options);
-      runOnJS(data); // worklet → JS
+      runOnJS(data);
     },
     [options, runOnJS],
   );
@@ -61,6 +62,7 @@ export const Camera = forwardRef(function Camera(
 });
 
 export { scanFaces } from './scanFaces';
+export { scanText } from './scanText';
 
 export type {
   Frame,
@@ -69,4 +71,7 @@ export type {
   CameraTypes,
   ScanFacesResult,
   FaceBox,
+  ScanTextResult,
+  OcrTextBox,
+  ScanTextOptions,
 } from './types';

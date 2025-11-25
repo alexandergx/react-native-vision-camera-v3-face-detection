@@ -35,3 +35,20 @@ export interface FaceBox {
 }
 
 export type ScanFacesResult = Record<string, FaceBox>;
+
+export interface OcrTextBox {
+  text: string;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+};
+
+export type ScanTextResult = Record<string, OcrTextBox>;
+
+export interface ScanTextOptions {
+  languageHints?: string[];
+  minTextHeight?: number;
+};

@@ -4,6 +4,9 @@ import type {
   FaceDetectionOptions,
   ScanFacesResult,
   FaceBox,
+  ScanTextOptions,
+  ScanTextResult,
+  OcrTextBox,
 } from './types';
 import type {
   Frame,
@@ -19,15 +22,22 @@ export declare function scanFaces(
   options: FaceDetectionOptions,
 ): ScanFacesResult;
 
+export declare function scanText(
+  frame: Frame,
+  options?: ScanTextOptions,
+): ScanTextResult;
+
 export type {
   CameraTypes,
   FaceDetectionOptions,
   ScanFacesResult,
   FaceBox,
+  ScanTextOptions,
+  ScanTextResult,
+  OcrTextBox,
 };
 
 export type {
   Frame,
   FrameProcessor,
 };
-
