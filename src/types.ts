@@ -21,7 +21,6 @@ export type CameraTypes = {
 
 /**
  * Shape of the result you get back from scanFaces.
- * (Right now it’s basically an index→face map, keep it loose if you want.)
  */
 export interface FaceBox {
   left: number;

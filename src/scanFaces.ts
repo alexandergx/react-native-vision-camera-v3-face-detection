@@ -1,4 +1,5 @@
-// src/scanFaces.ts
+import { VisionCameraProxy } from 'react-native-vision-camera';
+import { Platform } from 'react-native';
 
 import type {
   FaceDetectionOptions,
@@ -6,25 +7,24 @@ import type {
   ScanFacesResult,
 } from './types';
 
-import { VisionCameraProxy } from 'react-native-vision-camera';
-import { Platform } from 'react-native';
+type PluginType = ReturnType<typeof VisionCameraProxy.initFrameProcessorPlugin>;
 
-const plugin = VisionCameraProxy.initFrameProcessorPlugin('scanFaces');
+const plugin: PluginType =
+  VisionCameraProxy.initFrameProcessorPlugin('scanFaces');
 
 const LINKING_ERROR =
-  `The package 'react-native-vision-camera-v3-face-detection' doesn't seem to be linked.\n\n` +
-  Platform.select({ ios: "- Run 'pod install'\n", default: '' }) +
-  '- Rebuild the app after installing the package\n' +
-  '- Do not use Expo Go\n';
+  `The package 'react-native-vision-camera-v3-face-detection' doesn't seem to be linked. Make sure: \n\n` +
+  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
+  '- You rebuilt the app after installing the package\n' +
+  '- You are not using Expo Go\n';
 
 export function scanFaces(
   frame: Frame,
-  options?: FaceDetectionOptions
+  options: FaceDetectionOptions,
 ): ScanFacesResult {
   'worklet';
-
   if (plugin == null) throw new Error(LINKING_ERROR);
 
-  // @ts-ignore – plugin.call is provided by native C++ frame processor
+  // @ts-ignore – VisionCamera’s plugin.call is not typed
   return options ? plugin.call(frame, options) : plugin.call(frame);
 }
