@@ -33,7 +33,7 @@ export const Camera = forwardRef(function Camera(
   const { callback, options, device, ...rest } = props;
 
   const runOnJS = useRunInJS(
-    (data: object): void => {
+    (data: ScanFacesResult): void => {
       callback?.(data);
     },
     [callback],
@@ -42,7 +42,7 @@ export const Camera = forwardRef(function Camera(
   const frameProcessor: FrameProcessor = useFrameProcessor(
     (frame: Frame): void => {
       'worklet';
-      const data: object = scanFaces(frame, options);
+      const data: ScanFacesResult = scanFaces(frame, options);
       runOnJS(data); // worklet → JS
     },
     [options, runOnJS],

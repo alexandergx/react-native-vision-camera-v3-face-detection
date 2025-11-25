@@ -1,6 +1,5 @@
 export type {
   Frame,
-  FrameProcessorPlugin,
   FrameProcessor,
 } from 'react-native-vision-camera';
 import type { CameraProps, CameraDevice } from 'react-native-vision-camera';
