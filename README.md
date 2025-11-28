@@ -18,7 +18,7 @@ yarn add react-native-vision-camera-v3-face-detection
     Works With React Native Vision Camera.
     Works for Both Cameras.
     Works Fast.
-    Works With Android 🤖 and IOS.📱
+    Works With IOS 📱
     Writen With Kotlin and Objective-C.
 
 ## 💡 Usage
