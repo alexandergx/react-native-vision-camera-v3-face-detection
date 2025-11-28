@@ -16,9 +16,27 @@ export function scanText(
   options?: ScanTextOptions,
 ): ScanTextResult {
   'worklet';
+
+  // These logs run on the **worklet** runtime
+  // and should show up in your JS console.
   if (plugin == null) {
     throw new Error(LINKING_ERROR);
   }
+
   // @ts-expect-error frame-processor plugins are untyped at runtime
-  return options ? plugin.call(frame, options) : plugin.call(frame);
+  const raw = options ? plugin.call(frame, options) : plugin.call(frame);
+
+  // If raw is an array from native, map to Record<string, OcrTextBox>
+  const result: any = {};
+  if (Array.isArray(raw)) {
+    for (let i = 0; i < raw.length; i++) {
+      const item = raw[i];
+      result[String(i)] = item;
+    }
+  } else if (raw && typeof raw === 'object') {
+    // already an object – just pass through
+    Object.assign(result, raw);
+  }
+
+  return result as ScanTextResult;
 }

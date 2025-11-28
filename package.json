@@ -41,14 +41,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gev2002//react-native-vision-camera-v3-face-detection.git"
+    "url": "git+https://github.com/alexandergx/react-native-vision-camera-v3-face-detection.git"
   },
-  "author": "gev2002 <gev.avet.02@gmail.com> (https://github.com/gev2002/)",
+  "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gev2002//react-native-vision-camera-v3-face-detection/issues"
+    "url": "https://github.com/alexandergx/react-native-vision-camera-v3-face-detection/issues"
   },
-  "homepage": "https://github.com/gev2002//react-native-vision-camera-v3-face-detection#readme",
+  "homepage": "https://github.com/alexandergx/react-native-vision-camera-v3-face-detection#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

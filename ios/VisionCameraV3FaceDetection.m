@@ -10,12 +10,14 @@
 
 @implementation VisionCameraV3FaceDetectionPlugin
 
-- (instancetype _Nonnull)initWithProxy:(VisionCameraProxyHolder*)proxy
-                           withOptions:(NSDictionary* _Nullable)options {
-    self = [super initWithProxy:proxy withOptions:options];
-
-    return self;
+- (instancetype)init
+{
+  self = [super init];
+  if (self) {
+    // no special init logic needed for now
   }
+  return self;
+}
 
 
 

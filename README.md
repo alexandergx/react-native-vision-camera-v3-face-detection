@@ -3,8 +3,8 @@ Frame processor plugin to detect faces using Google ML Kit library for react-nat
 
 
 # 🚨 Required Modules
-react-native-vision-camera => 3.6.0 <br/>
-react-native-worklets-core = 0.2.2
+react-native-vision-camera => 3.9.0 <br/>
+react-native-worklets-core = 0.4.0
 
 ## 💻 Installation
 

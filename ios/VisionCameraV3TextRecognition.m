@@ -1,98 +1,142 @@
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 // ML Kit OCR modules
 @import MLKitVision;
+@import MLKitTextRecognition;
 @import MLKitTextRecognitionCommon;
-@import MLKitTextRecognition;          // Latin on-device model via GoogleMLKit/TextRecognition
 
 // VisionCamera bridge
 #import <VisionCamera/FrameProcessorPlugin.h>
 #import <VisionCamera/FrameProcessorPluginRegistry.h>
-#import <VisionCamera/VisionCameraProxy.h>
 #import <VisionCamera/Frame.h>
 
 @interface VisionCameraV3TextRecognitionPlugin : FrameProcessorPlugin
-@property(nonatomic, strong) MLKTextRecognizer *textRecognizer;
 @end
 
 @implementation VisionCameraV3TextRecognitionPlugin
 
-- (instancetype)init
-{
-  self = [super init];
-  if (self) {
-    // v2 API – create a single recognizer instance
-    MLKTextRecognizerOptions *options = [[MLKTextRecognizerOptions alloc] init];
-    _textRecognizer = [MLKTextRecognizer textRecognizerWithOptions:options];
-  }
-  return self;
-}
-
 - (id _Nullable)callback:(Frame* _Nonnull)frame
            withArguments:(NSDictionary* _Nullable)arguments
 {
+  NSLog(@"[OCR] scanText callback invoked!!! frame=%@ args=%@", frame, arguments);
+
   CMSampleBufferRef buffer = frame.buffer;
-  UIImageOrientation orientation = frame.orientation;
+  if (buffer == nil) {
+    NSLog(@"[OCR] ERROR: frame.buffer is nil");
+    return @{ @"debug": @"buffer_nil" };
+  }
 
-  // MLKit Vision Image
-  MLKVisionImage *image = [[MLKVisionImage alloc] initWithBuffer:buffer];
-  image.orientation = orientation;
+  CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(buffer);
+  if (imageBuffer == nil) {
+    NSLog(@"[OCR] ERROR: imageBuffer is nil");
+    return @{ @"debug": @"image_buffer_nil" };
+  }
 
-  // Use the shared recognizer
-  MLKTextRecognizer *textRecognizer = self.textRecognizer;
+  size_t width = CVPixelBufferGetWidth(imageBuffer);
+  size_t height = CVPixelBufferGetHeight(imageBuffer);
+  OSType pixelFormat = CVPixelBufferGetPixelFormatType(imageBuffer);
+  NSLog(@"[OCR] CVPixelBuffer w=%zu h=%zu format=0x%08x",
+        width, height, (unsigned int)pixelFormat);
 
-  __block NSMutableArray *output = [NSMutableArray array];
-  dispatch_group_t group = dispatch_group_create();
-  dispatch_group_enter(group);
+  // Mirror the working Swift example: VisionImage(buffer:)
+  MLKVisionImage *visionImage = [[MLKVisionImage alloc] initWithBuffer:buffer];
 
-  [textRecognizer processImage:image
-                    completion:^(MLKText * _Nullable text, NSError * _Nullable error) {
+  // The Swift plugin hard-codes .up; do the same for now
+  visionImage.orientation = UIImageOrientationUp;
 
-    if (error != nil || text == nil) {
-      dispatch_group_leave(group);
-      return;
-    }
+  NSError *error = nil;
+  MLKTextRecognizer *recognizer = [MLKTextRecognizer textRecognizer];
+  MLKText *result = [recognizer resultsInImage:visionImage error:&error];
 
-    NSInteger index = 0;
+  if (error != nil) {
+    NSLog(@"[OCR] ERROR from MLKit: %@", error);
+    return @{
+      @"debug": [NSString stringWithFormat:@"mlkit_error:%@", error.localizedDescription ?: @"unknown"]
+    };
+  }
 
-    for (MLKTextBlock *block in text.blocks) {
-      for (MLKTextLine *line in block.lines) {
-        for (MLKTextElement *element in line.elements) {
-          NSMutableDictionary *entry = [NSMutableDictionary dictionary];
+  if (result == nil) {
+    NSLog(@"[OCR] result == nil (no error)!!! recognizer=%@", recognizer);
+    return @{ @"debug": @"result_nil" };
+  }
 
-          // Text content
-          entry[@"text"] = element.text ?: @"";
+  NSLog(@"[OCR] fullText=\"%@\" !!! blocks=%lu",
+        result.text,
+        (unsigned long)result.blocks.count);
 
-          // Bounding box
-          CGRect rect = element.frame;
-          entry[@"left"]   = @(CGRectGetMinX(rect));
-          entry[@"top"]    = @(CGRectGetMinY(rect));
-          entry[@"right"]  = @(CGRectGetMaxX(rect));
-          entry[@"bottom"] = @(CGRectGetMaxY(rect));
-          entry[@"width"]  = @(CGRectGetWidth(rect));
-          entry[@"height"] = @(CGRectGetHeight(rect));
-
-          // Corner points
-          NSMutableArray *points = [NSMutableArray array];
-          for (NSValue *val in element.cornerPoints) {
-            CGPoint p = [val CGPointValue];
-            [points addObject:@{ @"x": @(p.x), @"y": @(p.y) }];
-          }
-          entry[@"cornerPoints"] = points;
-
-          // Add to array
-          [output addObject:entry];
-          index++;
-        }
+  if (result.blocks.count == 0) {
+    NSLog(@"[OCR] No text blocks!!!");
+    return @{
+      @"result": @{
+        @"text": result.text ?: @"",
+        @"blocks": @[],
+        @"debug": @"no_blocks"
       }
+    };
+  }
+
+  // Build a nested structure similar to the Swift implementation
+  NSMutableArray *blockArray = [NSMutableArray array];
+
+  for (MLKTextBlock *block in result.blocks) {
+    NSMutableArray *lines = [NSMutableArray array];
+
+    for (MLKTextLine *line in block.lines) {
+      NSMutableArray *elements = [NSMutableArray array];
+
+      for (MLKTextElement *el in line.elements) {
+        CGRect er = el.frame;
+        NSMutableArray *cornerPoints = [NSMutableArray array];
+        for (NSValue *val in el.cornerPoints) {
+          CGPoint p = [val CGPointValue];
+          [cornerPoints addObject:@{ @"x": @(p.x), @"y": @(p.y) }];
+        }
+
+        [elements addObject:@{
+          @"text": el.text ?: @"",
+          @"frame": @{
+            @"x": @(CGRectGetMinX(er)),
+            @"y": @(CGRectGetMinY(er)),
+            @"width": @(CGRectGetWidth(er)),
+            @"height": @(CGRectGetHeight(er))
+          },
+          @"cornerPoints": cornerPoints,
+        }];
+      }
+
+      CGRect lr = line.frame;
+      [lines addObject:@{
+        @"text": line.text ?: @"",
+        @"frame": @{
+          @"x": @(CGRectGetMinX(lr)),
+          @"y": @(CGRectGetMinY(lr)),
+          @"width": @(CGRectGetWidth(lr)),
+          @"height": @(CGRectGetHeight(lr))
+        },
+        @"elements": elements,
+      }];
     }
 
-    dispatch_group_leave(group);
-  }];
+    CGRect br = block.frame;
+    [blockArray addObject:@{
+      @"text": block.text ?: @"",
+      @"frame": @{
+        @"x": @(CGRectGetMinX(br)),
+        @"y": @(CGRectGetMinY(br)),
+        @"width": @(CGRectGetWidth(br)),
+        @"height": @(CGRectGetHeight(br))
+      },
+      @"lines": lines,
+    }];
+  }
 
-  // VisionCamera requires synchronous return
-  dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
-  return output;
+  return @{
+    @"result": @{
+      @"text": result.text ?: @"",
+      @"blocks": blockArray,
+    }
+  };
 }
 
 VISION_EXPORT_FRAME_PROCESSOR(VisionCameraV3TextRecognitionPlugin, scanText)
